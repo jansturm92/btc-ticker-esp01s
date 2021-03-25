@@ -1,8 +1,8 @@
 # Realtime Bitcoin Ticker
 
 
-![](demo.mp4)
-(1,75x speed)
+![](demo.gif)
+(1,75x speed, flickering from camera recording)
 
 ## Features
 - Displays current price and candle chart in **realtime** using websockets
