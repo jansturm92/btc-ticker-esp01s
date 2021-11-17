@@ -1,7 +1,10 @@
+#ifndef BTC_TICKER_TICKERDRAWER_HPP
+#define BTC_TICKER_TICKERDRAWER_HPP
+
+#include "ITickerDisplay.hpp"
 #include "config.h"
-#include <Adafruit_SSD1306.h>
-#include <array>
-#include <stddef.h>
+#include <cstddef>
+#include <vector>
 
 typedef struct {
     unsigned long t; // Kline start time
@@ -16,21 +19,21 @@ typedef struct {
 class TickerDrawer {
 
   private:
-    Adafruit_SSD1306 &display;
+    ITickerDisplay &display;
     std::vector<Candle> candles;
     int maxPrice, minPrice;
-    String interval_amount;
-    String interval;
 
-    void printCandle(const size_t offset, const Candle &candle);
+    void printCandle(size_t offset, const Candle &candle);
     void calculateMinMax();
 
   public:
-    TickerDrawer(Adafruit_SSD1306 &display);
+    explicit TickerDrawer(ITickerDisplay &display);
 
     void deleteCandles();
-    int update(const Candle candle);
-    void appendCandle(const Candle candle);
+    int update(Candle candle);
+    void appendCandle(Candle candle);
     void printAllCandles();
     void printPrices();
 };
+
+#endif // BTC_TICKER_TICKERDRAWER_HPP

@@ -1,26 +1,28 @@
 # Realtime Bitcoin Ticker
 
 
-![](demo.gif)
-(1,75x speed, flickering from camera recording)
+![](img/demo.gif)
+<img src="img/ttgo.jpg" width="500" height="300">
 
 ## Features
 - Displays current price and candle chart in **realtime** using websockets
-- Tiny form factor with an **ESP8266 ESP-01S WiFi Module** and a **SSD1306 OLED** display
+- Supported boards:
+    - **ESP8266 ESP-01S WiFi Module** combined with a **SSD1306 OLED** display
+    - **LILYGO TTGO T-Display ESP32**
 - Based on PlatformIO for dependency management, compilation and flashing of binaries
 - Arduino framework
 
 
 ## Hardware requirements
-- ESP8266 ESP-01S WiFi Module
-- OLED Display SSD1306 128×64
+- ESP8266 ESP-01S WiFi Module combined with OLED Display SSD1306 128×64
 - Programmer for the ESP8266 (I used a USB to Serial Converter)
+- LILYGO TTGO T-Display ESP32 Development Board
 
-<img src="dev_setup.jpg" width="500" height="300">
+<img src="img/dev_setup.jpg" width="600" height="300">
 
 ## Usage
 
-### Pin connections
+### Pin connections for ESP8266
 ESP8266 programming mode
 <img src="https://content.instructables.com/ORIG/F35/436R/JQMOG3VK/F35436RJQMOG3VK.png" width="800" height="300">
 
@@ -37,13 +39,31 @@ Make sure PlatformIO is installed (see also the [PlatformIO documentation](https
 ```bash
 $ pip install -U platformio
 ```
-Set the WiFi parameters in `config.h`, then compile the project and create the firmware:
+Set the WiFi parameters in `config.h`, then choose an environment <env> from:
 ```bash
-$ pio run
+$ pio project config
 ```
-Put the ESP8266 in programming mode and flash the device with
+Compile the project and create the firmware for a specific environment:
 ```bash
-$ pio run -t upload
+$ pio run -e <env>
+```
+
+#### ESP8266
+Put the ESP8266 in programming mode and flash the device:
+```bash
+$ pio run -e esp01_1m -t upload
+```
+
+#### TTGO
+Connect the board and flash the firmware:
+```bash
+$ pio run -e ttgo -t upload
+```
+
+#### Debugging
+For verbose serial output choose the respective debug environments:
+```bash
+$ pio run -e <env>:debug -t upload
 ```
 
 ## License

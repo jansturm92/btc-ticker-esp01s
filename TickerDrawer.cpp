@@ -1,27 +1,26 @@
 #include "TickerDrawer.hpp"
+#include <Arduino.h>
 #include <limits>
 
-TickerDrawer::TickerDrawer(Adafruit_SSD1306 &display) : display(display) {
-
-    String candleInterval = String(CANDLE_INTERVAL);
-    unsigned int stringLength = candleInterval.length();
-    interval_amount = candleInterval.substring(0, stringLength - 1);
-    interval = candleInterval[stringLength - 1];
+TickerDrawer::TickerDrawer(ITickerDisplay &display) : display(display) {
+    candles.reserve(CANDLES_MAX);
+    maxPrice = std::numeric_limits<int>::min();
+    minPrice = std::numeric_limits<int>::max();
 }
 
 void TickerDrawer::printPrices() {
 
     // clear whole price panel
     display.fillRect(0, PANEL_PRICES_TOP, OLED_SCREEN_WIDTH,
-                     PANEL_PRICES_BOTTOM - PANEL_PRICES_TOP, BLACK);
+                     PANEL_PRICES_BOTTOM - PANEL_PRICES_TOP, TickerColor::COL_BLACK);
 
     // print current price
-    display.setTextSize(2);
+    display.setTextSize(TEXTSIZE_CURRENT);
     display.setCursor(0, PANEL_PRICES_TOP);
     display.printf("%d", candles.back().c);
 
     // print high low prices
-    display.setTextSize(1);
+    display.setTextSize(TEXTSIZE_HIGHLOW);
     display.setCursor(PANEL_PRICES_HIGHLOW_X, PANEL_PRICES_TOP);
     display.printf("H %d", maxPrice);
     display.setCursor(PANEL_PRICES_HIGHLOW_X,
@@ -29,11 +28,17 @@ void TickerDrawer::printPrices() {
     display.printf("L %d", minPrice);
 
     // print candle interval
+    display.setTextSize(TEXTSIZE_CANDLE_INTERVAL);
+#ifdef PANEL_PRICES_INTERVAL_Y
+    display.setCursor(0, PANEL_PRICES_INTERVAL_Y);
+    display.printf("%s", CANDLE_INTERVAL);
+#else
     display.setCursor(PANEL_PRICES_INTERVAL_X, PANEL_PRICES_TOP);
-    display.printf("%2s", interval_amount.c_str());
+    display.printf("%2s", CANDLE_INTERVAL_PERIOD);
     display.setCursor(PANEL_PRICES_INTERVAL_X,
                       ((PANEL_PRICES_TOP + PANEL_PRICES_BOTTOM) >> 1) + 1);
-    display.printf("%2s", interval.c_str());
+    display.printf("%2s", CANDLE_INTERVAL_UNIT);
+#endif
 }
 
 void TickerDrawer::deleteCandles() {
@@ -83,7 +88,8 @@ void TickerDrawer::appendCandle(const Candle candle) {
 }
 
 void TickerDrawer::printAllCandles() {
-    display.fillRect(0, PANEL_CANDLE_TOP, OLED_SCREEN_WIDTH, PANEL_CANDLE_BOTTOM, BLACK);
+    display.fillRect(0, PANEL_CANDLE_TOP, OLED_SCREEN_WIDTH, PANEL_CANDLE_BOTTOM,
+                     TickerColor::COL_BLACK);
 
     for (size_t i = 0; i < candles.size(); ++i) {
         printCandle(i, candles[i]);
@@ -103,15 +109,20 @@ void TickerDrawer::printCandle(const size_t candleNumber, const Candle &candle) 
     int cy = getY(candle.c, minPrice, maxPrice);
     int x = candleNumber * (CANDLE_WIDTH + CANDLE_SPACING);
 
-    // clear the candle
-    display.fillRect(x, PANEL_CANDLE_TOP, CANDLE_WIDTH, PANEL_CANDLE_BOTTOM, BLACK);
-    // draw upper and lower shadow
-    display.drawFastVLine(x + (CANDLE_WIDTH >> 1), hy, ly - hy, WHITE);
-    // draw body
-    display.drawRect(x, min(oy, cy), CANDLE_WIDTH, abs(cy - oy), WHITE);
     // positive or negative candle
+    TickerColor candleColor = cy > oy ? TickerColor::COL_RED : TickerColor::COL_GREEN;
+
+    // clear the candle
+    display.fillRect(x, PANEL_CANDLE_TOP, CANDLE_WIDTH, PANEL_CANDLE_BOTTOM,
+                     TickerColor::COL_BLACK);
+    // draw upper and lower shadow
+    display.drawVLine(x + (CANDLE_WIDTH >> 1), hy, ly - hy,
+                      display.isBlackWhite() ? TickerColor::COL_WHITE : candleColor);
+    // draw body
+    display.drawRect(x, min(oy, cy), CANDLE_WIDTH, abs(cy - oy),
+                     display.isBlackWhite() ? TickerColor::COL_WHITE : candleColor);
     display.fillRect(x + 1, min(oy, cy) + 1, CANDLE_WIDTH - 2, abs(cy - oy) - 2,
-                     cy > oy ? BLACK : WHITE);
+                     candleColor);
 }
 
 void TickerDrawer::calculateMinMax() {
